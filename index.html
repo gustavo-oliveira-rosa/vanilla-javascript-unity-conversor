@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Unidades</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --background-color: #f5f7fa;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .converter {
+            background-color: var(--card-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .input-field {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Conversor de Unidades</h1>
+            <p class="description">Converta facilmente entre diferentes unidades de medida</p>
+        </header>
+
+        <div class="converter">
+            <div class="input-group">
+                <div class="input-field">
+                    <label for="value">Valor:</label>
+                    <input type="number" id="value" placeholder="Digite o valor" step="any">
+                </div>
+                <div class="input-field">
+                    <label for="category">Categoria:</label>
+                    <select id="category">
+                        <option value="comprimento">Comprimento</option>
+                        <option value="peso">Peso</option>
+                        <option value="temperatura">Temperatura</option>
+                        <option value="volume">Volume</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <div class="input-field">
+                    <label for="from-unit">De:</label>
+                    <select id="from-unit">
+                        <!-- Opções serão preenchidas via JavaScript -->
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label for="to-unit">Para:</label>
+                    <select id="to-unit">
+                        <!-- Opções serão preenchidas via JavaScript -->
+                    </select>
+                </div>
+            </div>
+            
+            <button id="convert-btn">Converter</button>
+            <div class="result" id="result"></div>
+        </div>
+
+        <footer>
+            <p>Conversor de Unidades &copy; 2023</p>
+        </footer>
+    </div>
+
+    <script>
+        // Definição das categorias e unidades
+        const units = {
+            comprimento: {
+                metros: 1,
+                quilometros: 1000,
+                centimetros: 0.01,
+                milimetros: 0.001,
+                milhas: 1609.34,
+                jardas: 0.9144,
+                pes: 0.3048,
+                polegadas: 0.0254
+            },
+            peso: {
+                quilogramas: 1,
+                gramas: 0.001,
+                miligramas: 0.000001,
+                libras: 0.453592,
+                oncas: 0.0283495,
+                toneladas: 1000
+            },
+            temperatura: {
+                celsius: 'celsius',
+                fahrenheit: 'fahrenheit',
+                kelvin: 'kelvin'
+            },
+            volume: {
+                litros: 1,
+                mililitros: 0.001,
+                metrosCubicos: 1000,
+                centimetrosCubicos: 0.001,
+                galoes: 3.78541,
+                pints: 0.473176,
+                xicaras: 0.24
+            }
+        };
+
+        // Elementos DOM
+        const categorySelect = document.getElementById('category');
+        const fromUnitSelect = document.getElementById('from-unit');
+        const toUnitSelect = document.getElementById('to-unit');
+        const convertBtn = document.getElementById('convert-btn');
+        const resultDiv = document.getElementById('result');
+
+        // Preencher os selects com as unidades baseado na categoria selecionada
+        function populateUnitSelects() {
+            const category = categorySelect.value;
+            
+            // Limpar selects
+            fromUnitSelect.innerHTML = '';
+            toUnitSelect.innerHTML = '';
+            
+            // Preencher com as unidades da categoria selecionada
+            for (const unit in units[category]) {
+                const optionFrom = document.createElement('option');
+                optionFrom.value = unit;
+                optionFrom.textContent = unit;
+                fromUnitSelect.appendChild(optionFrom);
+                
+                const optionTo = document.createElement('option');
+                optionTo.value = unit;
+                optionTo.textContent = unit;
+                toUnitSelect.appendChild(optionTo);
+            }
+            
+            // Definir valores padrão diferentes para "De" e "Para"
+            const unitKeys = Object.keys(units[category]);
+            if (unitKeys.length > 1) {
+                fromUnitSelect.value = unitKeys[0];
+                toUnitSelect.value = unitKeys[1];
+            }
+        }
+
+        // Converter unidades
+        function convertUnits() {
+            const value = parseFloat(document.getElementById('value').value);
+            const category = categorySelect.value;
+            const fromUnit = fromUnitSelect.value;
+            const toUnit = toUnitSelect.value;
+            
+            // Validar entrada
+            if (isNaN(value)) {
+                alert('Por favor, insira um valor numérico válido.');
+                return;
+            }
+            
+            if (!fromUnit || !toUnit) {
+                alert('Por favor, selecione as unidades de origem e destino.');
+                return;
+            }
+            
+            let result;
+            
+            // Conversão para temperatura (requer fórmula especial)
+            if (category === 'temperatura') {
+                result = convertTemperature(value, fromUnit, toUnit);
+            } else {
+                // Conversão para outras unidades (baseada em fatores)
+                const fromFactor = units[category][fromUnit];
+                const toFactor = units[category][toUnit];
+                result = value * fromFactor / toFactor;
+            }
+            
+            // Exibir resultado
+            resultDiv.textContent = `${value} ${fromUnit} = ${result.toFixed(6)} ${toUnit}`;
+            resultDiv.style.display = 'block';
+        }
+
+        // Converter temperatura
+        function convertTemperature(value, fromUnit, toUnit) {
+            if (fromUnit === toUnit) return value;
+            
+            // Converter para Celsius primeiro
+            let celsius;
+            switch (fromUnit) {
+                case 'celsius':
+                    celsius = value;
+                    break;
+                case 'fahrenheit':
+                    celsius = (value - 32) * 5/9;
+                    break;
+                case 'kelvin':
+                    celsius = value - 273.15;
+                    break;
+            }
+            
+            // Converter de Celsius para unidade de destino
+            switch (toUnit) {
+                case 'celsius':
+                    return celsius;
+                case 'fahrenheit':
+                    return (celsius * 9/5) + 32;
+                case 'kelvin':
+                    return celsius + 273.15;
+            }
+        }
+
+        // Inicializar a aplicação
+        function init() {
+            populateUnitSelects();
+            
+            // Event listeners
+            convertBtn.addEventListener('click', convertUnits);
+            categorySelect.addEventListener('change', populateUnitSelects);
+            
+            // Permitir conversão pressionando Enter no campo de valor
+            document.getElementById('value').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    convertUnits();
+                }
+            });
+        }
+
+        // Iniciar quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
